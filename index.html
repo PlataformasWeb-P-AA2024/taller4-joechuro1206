@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Demo jQuery - jQueryUI - CouchDB</title>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="estilos.css">
+  <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+</head>
+<body>
+  <h3>Ejemplo de Uso de jQuery + CouchDB</h3>
+  <div id="pestanias">
+    <ul>
+      <li><a href="#t1">Principal</a></li>
+      <li><a href="#t2">Buscar por Cantón</a></li>
+      <li><a href="#t3">Buscar por Límite</a></li>
+    </ul>
+    <div id="t1">
+      <p id="mensajeFinal"></p>
+      <button type="submit" id="all">All información</button>
+    </div>
+    <div id="t2">
+      <p id="mensajeFinal2"></p>
+      <input type="text" name="busquedaCanton" id="busquedaCanton">
+      <button type="submit" id="buscarCantonButton">Buscar por Cantón</button>
+    </div>
+    <div id="t3">
+      <p id="mensajeFinal3"></p>
+      <input type="text" name="limite" id="limite">
+      <button id="buscarLimiteButton">Buscar por Límite</button>
+    </div>
+  </div>
+  <script>
+    $(document).ready(function() {
+      $("#pestanias").tabs();
+      
+      $("#all").click(function() {
+        $.ajax({
+          dataType: 'json',
+          url: "http://127.0.0.1:5984/instituciones/_all_docs?include_docs=true"
+        }).then(function(data) {
+          console.log(data);
+          mostrarTabla("#mensajeFinal", data);
+        });
+      });
+      
+      $("#buscarCantonButton").click(function() {
+        var busqueda = $("#busquedaCanton").val();
+        $.ajax({
+          dataType: 'json',
+          url: 'http://127.0.0.1:5984/instituciones/_design/busca/_view/_view?key="' + busqueda + '"&include_docs=true'
+        }).then(function(data) {
+          console.log(data);
+          mostrarTabla("#mensajeFinal2", data);
+        });
+      });
+
+      $("#buscarLimiteButton").click(function() {
+        var limite = $("#limite").val();
+        $.ajax({
+          dataType: 'json',
+          url: 'http://127.0.0.1:5984/instituciones/_all_docs?limit=' + limite + '&include_docs=true'
+        }).then(function(data) {
+          console.log(data);
+          mostrarTabla("#mensajeFinal3", data);
+        });
+      });
+
+      function mostrarTabla(id, data) {
+        $(id).empty().append("<table> <tr><th>AMIE:</th> <th>Nombre Institución:</th> <th>Provincia:</th> <th>Cantón:</th></tr>");
+        for (var i = 0; i < data.rows.length; i++) {
+          var amie = data.rows[i].doc.AMIE;
+          var nomInst = data.rows[i].doc.Nombre_Institucion;
+          var provincia = data.rows[i].doc.Provincia;
+          var canton = data.rows[i].doc.Canton;
+          $(id + " table").append("<tr><td>" + amie + "</td><td>" + nomInst + "</td><td>" + provincia + "</td><td>" + canton + "</td></tr>");
+        }
+        $(id).append("</table>");
+      }
+    });
+  </script>
+</body>
+</html>
